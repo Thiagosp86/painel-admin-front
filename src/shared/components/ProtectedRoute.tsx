@@ -1,14 +1,14 @@
+import { useAuth } from '@/shared/context/AuthContext';
 import { Navigate } from 'react-router-dom';
 import type { ReactNode } from 'react';
 
 interface ProtectedRouteProps {
-  isAuthenticated: boolean;
   children: ReactNode;
 }
 
-export function ProtectedRoute({ isAuthenticated, children }: ProtectedRouteProps) {
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-  return children;
+export function ProtectedRoute({ children }: ProtectedRouteProps) {
+  const { user, initializing } = useAuth();
+  if (initializing) return null; // ou um spinner
+  if (!user) return <Navigate to="/login" replace />;
+  return <>{children}</>;
 }

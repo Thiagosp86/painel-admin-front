@@ -21,6 +21,7 @@ export interface AuthContextType {
   logout: () => void;
   hasPermission: (permission: Permission) => boolean;
   loading: boolean;
+  initializing: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -30,6 +31,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [loading, setLoading] = useState(false);
+  const [initializing, setInitializing] = useState(true);
   const navigate = useNavigate();
 
   const login = async (email: string, password: string) => {
@@ -44,7 +46,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(user);
       setIsAuthenticated(true);
       setPermissions(user.permissions || []);
-      navigate('/dashboard');
+      navigate('/dashboard', { replace: true }); // <-- use replace para evitar duplicação na URL
     } catch (error) {
       console.error('Erro ao fazer login:', error);
       alert('Credenciais inválidas');
@@ -59,7 +61,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
     setIsAuthenticated(false);
     setPermissions([]);
-    navigate('/login');
+    navigate('/login', { replace: true }); // <-- use replace aqui também
   };
 
   const hasPermission = (permission: Permission) => {
@@ -73,9 +75,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (token && storedUser) {
       const parsedUser = JSON.parse(storedUser);
       setUser(parsedUser);
-      setIsAuthenticated(true);
+      setIsAuthenticated(true); // <-- sempre true se usuário existe
       setPermissions(parsedUser.permissions || []);
-      // opcional: pode validar token com backend aqui
+      setInitializing(false);
     } else if (token) {
       axios
         .get(`${API_URL}/auth/profile`, {
@@ -83,19 +85,36 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         })
         .then(response => {
           setUser(response.data);
-          setIsAuthenticated(true);
+          setIsAuthenticated(true); // <-- sempre true se usuário existe
           setPermissions(response.data.permissions || []);
           localStorage.setItem('user', JSON.stringify(response.data));
         })
         .catch(() => {
           logout();
+        })
+        .finally(() => {
+          setInitializing(false);
         });
+    } else {
+      setUser(null); // <-- garanta que user seja null
+      setIsAuthenticated(false); // <-- garanta que isAuthenticated seja false
+      setPermissions([]);
+      setInitializing(false);
     }
   }, []);
 
   return (
     <AuthContext.Provider
-      value={{ user, isAuthenticated, permissions, login, logout, hasPermission, loading }}
+      value={{
+        user,
+        isAuthenticated,
+        permissions,
+        login,
+        logout,
+        hasPermission,
+        loading,
+        initializing,
+      }}
     >
       {children}
     </AuthContext.Provider>
