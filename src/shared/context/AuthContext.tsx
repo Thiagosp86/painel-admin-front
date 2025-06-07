@@ -20,6 +20,7 @@ export interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   hasPermission: (permission: Permission) => boolean;
+  loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -28,9 +29,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [permissions, setPermissions] = useState<Permission[]>([]);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const login = async (email: string, password: string) => {
+    setLoading(true);
     try {
       const response = await axios.post(`${API_URL}/auth/login`, { email, password });
       const { access_token, user } = response.data;
@@ -45,6 +48,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch (error) {
       console.error('Erro ao fazer login:', error);
       alert('Credenciais inválidas');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -90,7 +95,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, isAuthenticated, permissions, login, logout, hasPermission }}
+      value={{ user, isAuthenticated, permissions, login, logout, hasPermission, loading }}
     >
       {children}
     </AuthContext.Provider>

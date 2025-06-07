@@ -1,44 +1,73 @@
 import { useAuth } from '@/shared/context/AuthContext';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { User, LogOut, Mail } from 'lucide-react';
 
 export const DashboardPage = () => {
-  const { user, hasPermission, logout } = useAuth();
+  const { user, logout } = useAuth();
 
   return (
-    <div
-      style={{
-        maxWidth: 480,
-        margin: '2rem auto',
-        padding: '2rem',
-        background: '#fff',
-        borderRadius: 12,
-        boxShadow: '0 2px 16px rgba(0,0,0,0.08)',
-        color: '#213547',
-      }}
-    >
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1 style={{ margin: 0 }}>Dashboard</h1>
-        <button onClick={logout} style={{ background: '#e74c3c', color: '#fff' }}>
-          Sair
-        </button>
-      </header>
-      {user && (
-        <p style={{ marginTop: 24, fontSize: 18 }}>
-          Olá, <strong>{user.name}</strong>!
-        </p>
-      )}
-
-      <div style={{ marginTop: 32 }}>
-        {hasPermission('canManageUsers') && (
-          <button style={{ marginBottom: 16, width: '100%' }}>Gerenciar Usuários</button>
-        )}
-
-        {hasPermission('canViewReports') ? (
-          <div style={{ color: '#27ae60', marginTop: 16 }}>Acesso a relatórios permitido</div>
-        ) : (
-          <div style={{ color: '#e67e22', marginTop: 16 }}>
-            Você não tem permissão para ver relatórios
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-4">
+      <div className="max-w-4xl mx-auto">
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              Dashboard
+            </h1>
+            <p className="text-muted-foreground mt-1">Bem-vindo ao seu painel de controle</p>
           </div>
-        )}
+          <Button
+            onClick={logout}
+            variant="outline"
+            className="flex items-center gap-2 hover:bg-destructive hover:text-destructive-foreground transition-colors"
+          >
+            <LogOut className="w-4 h-4" />
+            Sair
+          </Button>
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Perfil do Usuário</CardTitle>
+              <User className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <User className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm">{user?.name}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Mail className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm">{user?.email}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Status</CardTitle>
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-600">Online</div>
+              <p className="text-xs text-muted-foreground">Conectado com sucesso</p>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Último Login</CardTitle>
+              <User className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">Agora</div>
+              <p className="text-xs text-muted-foreground">{new Date().toLocaleString('pt-BR')}</p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

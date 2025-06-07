@@ -32,29 +32,88 @@ npm create vite@latest my-admin-panel -- --template react-ts
 - **ESLint/Prettier**: Padronização de código.
 - **Alias `@`**: Facilita imports.
 - **React Router**: Gerenciamento de rotas.
+- **Tailwind CSS**: Utilizado para estilização rápida e responsiva.
+- **shadcn/ui**: Kit de componentes React moderno e personalizável.
+- **lucide-react**: Ícones SVG modernos.
 
-### 3. AuthContext
+### 3. Instalação de Dependências de UI
+
+Para utilizar os componentes e estilos do projeto, execute:
+
+```bash
+npm install tailwindcss postcss autoprefixer
+npx tailwindcss init -p
+npm install lucide-react
+```
+
+#### Configure o Tailwind
+
+No arquivo `tailwind.config.js`:
+```js
+module.exports = {
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
+  ],
+  theme: { extend: {} },
+  plugins: [],
+}
+```
+No arquivo `src/index.css`:
+```css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+```
+
+#### Instale e gere os componentes do shadcn/ui
+
+```bash
+npx shadcn@latest init
+npx shadcn@latest add button input card label
+```
+
+---
+
+## 🔹 AuthContext
+
 Gerencia autenticação globalmente:
 - Faz login via backend.
 - Salva token e usuário no `localStorage`.
 - Recupera estado ao iniciar.
 - Permite logout e checagem de permissões reais vindas do backend.
+- Exibe loading durante autenticação.
 
-### 4. LoginPage
-Página de login com formulário controlado.  
+---
+
+## 🔹 LoginPage
+
+Página de login estilizada com shadcn/ui e Tailwind.  
 Ao submeter, chama o método `login` do contexto.
 
-### 5. DashboardPage
-Página protegida, só acessível autenticado.  
-Exibe o nome do usuário logado, permissões reais e botão de logout.
+---
 
-### 6. ProtectedRoute
+## 🔹 DashboardPage
+
+Página protegida, só acessível autenticado.  
+Exibe o nome do usuário logado, email, status e último login, usando cards do shadcn/ui.
+
+---
+
+## 🔹 ProtectedRoute
+
 Componente que protege rotas, redirecionando para login se não autenticado.
 
-### 7. Persistência de Sessão
+---
+
+## 🔹 Persistência de Sessão
+
 Ao recarregar, o contexto recupera token e usuário do `localStorage` para manter o usuário logado.
 
-### 8. Logout
+---
+
+## 🔹 Logout
+
 Remove token e usuário do `localStorage` e redireciona para login.
 
 ---
@@ -66,7 +125,7 @@ Remove token e usuário do `localStorage` e redireciona para login.
 - [x] Persistência de sessão no frontend
 - [x] Permissões reais por usuário implementadas
 - [x] Nome do usuário logado exibido no dashboard
-- [x] Melhorar UI/UX
+- [x] UI/UX moderna com shadcn/ui e Tailwind
 
 ---
 
