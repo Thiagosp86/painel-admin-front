@@ -2,10 +2,10 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { LoginPage } from '@/auth/presentation/pages/LoginPage';
 import { DashboardPage } from '@/shared/pages/DashboardPage';
 import { ProtectedRoute } from './shared/components/ProtectedRoute';
-// ajuste o caminho
+import { useAuth } from '@/shared/context/AuthContext'; // adicionado
 
 export function App() {
-  const isAuthenticated = Boolean(localStorage.getItem('token')); // ou seu estado auth real
+  const { isAuthenticated } = useAuth(); // use o contexto
 
   return (
     <Routes>

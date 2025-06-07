@@ -1,182 +1,81 @@
-# Autenticação com JWT - Projeto Fullstack (React + NestJS + PostgreSQL)
+# Painel Admin - Autenticação JWT (React + NestJS)
 
-Este é um guia detalhado de tudo que foi feito até agora no projeto de autenticação com JWT, com frontend em **React + TypeScript** e backend em **NestJS + Prisma + PostgreSQL**.
+Este projeto é um painel administrativo fullstack, com autenticação JWT, utilizando **React + TypeScript** no frontend e um microserviço de autenticação (NestJS) no backend.
 
 ---
 
-## 🔹 Estrutura do Projeto
+## 📁 Estrutura do Projeto
 
 ```
 /www
 ├── my-admin-panel     # Frontend React
-└── auth-backend       # Backend NestJS
+└── auth-backend       # Backend NestJS (serviço de autenticação)
 ```
 
 ---
 
-## 📁 Backend (NestJS)
+## 🔹 Integração com o Serviço de Autenticação
 
-### 1. Criação do projeto NestJS
-```bash
-nest new auth-backend
-```
-
-### 2. Configuração do Prisma + PostgreSQL
-```bash
-npm install prisma @prisma/client
-npx prisma init
-```
-
-- No arquivo `.env`, configurar URL do banco:
-```env
-DATABASE_URL="postgresql://usuario:senha@localhost:5432/nome_do_banco"
-```
-
-### 3. Definir schema Prisma
-```prisma
-model User {
-  id       Int     @id @default(autoincrement())
-  name     String
-  email    String  @unique
-  password String
-}
-```
-```bash
-npx prisma migrate dev --name init
-```
-
-### 4. Criar o PrismaService
-Arquivo: `src/prisma/prisma.service.ts`
-```ts
-import { Injectable } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
-
-@Injectable()
-export class PrismaService extends PrismaClient {}
-```
-
-### 5. Módulo e Service de Auth
-```bash
-nest g module auth
-nest g service auth
-nest g controller auth
-```
-
-### 6. Instalar e configurar JWT
-```bash
-npm install @nestjs/jwt
-```
-No `auth.module.ts`:
-```ts
-JwtModule.register({
-  secret: 'sua_chave_secreta_aqui',
-  signOptions: { expiresIn: '1d' },
-})
-```
-
-### 7. AuthService
-```ts
-async login(email: string, password: string) {
-  const user = await this.prisma.user.findUnique({ where: { email } });
-  if (!user || user.password !== password) {
-    throw new UnauthorizedException('Credenciais inválidas');
-  }
-  const payload = { sub: user.id, email: user.email, name: user.name };
-  const token = this.jwtService.sign(payload);
-  return {
-    access_token: token,
-    user: {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-    },
-  };
-}
-```
-
-### 8. Endpoint protegido `/auth/profile`
-- Usa o `JwtGuard` e `@Req()` para acessar o token decodificado.
-
-### 9. Liberar CORS no `main.ts`
-```ts
-app.enableCors({
-  origin: 'http://localhost:5173',
-  credentials: true,
-});
-```
-
-### 10. Seed com 3 usuários
-```bash
-npx prisma db seed
-```
-Arquivo `prisma/seed.ts`:
-```ts
-await prisma.user.createMany({
-  data: [
-    { name: 'User One', email: 'user1@example.com', password: 'thiago' },
-    { name: 'User Two', email: 'user2@example.com', password: 'thiago' },
-    { name: 'User Three', email: 'user3@example.com', password: 'thiago' },
-  ]
-});
-```
+O frontend comunica-se com o microserviço de autenticação via HTTP, utilizando endpoints para login, logout e recuperação do perfil do usuário autenticado. Toda a lógica de banco de dados e gerenciamento de usuários está centralizada no serviço de autenticação.
 
 ---
 
-## 📁 Frontend (React + Vite + TypeScript)
+## 🔹 Frontend (React + Vite + TypeScript)
 
-### 1. Criação do projeto React
+### 1. Criação do Projeto
+Criado com Vite para desenvolvimento rápido:
 ```bash
 npm create vite@latest my-admin-panel -- --template react-ts
 ```
 
-### 2. Estrutura e ferramentas
-- ESLint, Prettier, Alias: `@` para `src`
-- Roteamento com React Router
+### 2. Estrutura e Ferramentas
+- **ESLint/Prettier**: Padronização de código.
+- **Alias `@`**: Facilita imports.
+- **React Router**: Gerenciamento de rotas.
 
-### 3. AuthContext com login real via backend
-Arquivo: `shared/context/AuthContext.tsx`
+### 3. AuthContext
+Gerencia autenticação globalmente:
+- Faz login via backend.
+- Salva token e usuário no `localStorage`.
+- Recupera estado ao iniciar.
+- Permite logout e checagem de permissões reais vindas do backend.
 
-```ts
-const login = async (email: string, password: string) => {
-  try {
-    const response = await axios.post(`${API_URL}/auth/login`, { email, password });
-    const { access_token, user } = response.data;
-    localStorage.setItem('token', access_token);
-    setUser(user);
-    navigate('/dashboard');
-  } catch (err) {
-    alert('Credenciais inválidas');
-  }
-};
-```
+### 4. LoginPage
+Página de login com formulário controlado.  
+Ao submeter, chama o método `login` do contexto.
 
-### 4. LoginPage com form funcional
-```ts
-<form onSubmit={handleSubmit}>
-  <input type="email" ... />
-  <input type="password" ... />
-  <button type="submit">Entrar</button>
-</form>
-```
+### 5. DashboardPage
+Página protegida, só acessível autenticado.  
+Exibe o nome do usuário logado, permissões reais e botão de logout.
 
-### 5. Testes
-- Login com sucesso: token é salvo e redireciona para `/dashboard`
-- Verificação de JWT: token armazenado e válido
+### 6. ProtectedRoute
+Componente que protege rotas, redirecionando para login se não autenticado.
+
+### 7. Persistência de Sessão
+Ao recarregar, o contexto recupera token e usuário do `localStorage` para manter o usuário logado.
+
+### 8. Logout
+Remove token e usuário do `localStorage` e redireciona para login.
 
 ---
 
 ## ✅ Status Atual
-- [x] Backend funcionando com autenticação JWT
-- [x] Frontend envia email/senha e trata resposta
-- [x] Redirecionamento após login
-- [x] Seed de banco com 3 usuários testados
-- [x] CORS habilitado e token funcionando
+
+- [x] Integração com serviço de autenticação JWT e endpoints protegidos
+- [x] Frontend com login, logout e proteção de rotas
+- [x] Persistência de sessão no frontend
+- [x] Permissões reais por usuário implementadas
+- [x] Nome do usuário logado exibido no dashboard
+- [x] Melhorar UI/UX
 
 ---
 
 ## 📈 Próximos Passos
-- Implementar `AuthGuard` no frontend para proteger rotas
-- Recuperar perfil logado via `/auth/profile`
-- Salvar token no `localStorage` e carregar estado ao iniciar
-- Exibir nome do usuário logado no dashboard
-- Adicionar logout
+
+- Adicionar testes automatizados
+
+---
+
+## 📂 Documentação por Pasta
+
+Cada pasta do frontend contém um `README.md` explicando o propósito e o que deve conter. Veja os arquivos `README.md` dentro de cada diretório para detalhes.

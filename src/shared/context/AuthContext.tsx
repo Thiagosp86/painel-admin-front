@@ -10,6 +10,7 @@ interface User {
   id: number;
   email: string;
   name: string;
+  permissions: Permission[];
 }
 
 export interface AuthContextType {
@@ -36,9 +37,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.log('Login successful:', user);
 
       localStorage.setItem('token', access_token);
+      localStorage.setItem('user', JSON.stringify(user));
       setUser(user);
       setIsAuthenticated(true);
-      setPermissions(['canAccessDashboard']); // ajuste depois baseado em dados reais
+      setPermissions(user.permissions || []);
       navigate('/dashboard');
     } catch (error) {
       console.error('Erro ao fazer login:', error);
@@ -48,6 +50,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('user'); // remove usuário
     setUser(null);
     setIsAuthenticated(false);
     setPermissions([]);
@@ -61,7 +64,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Persistência do login
   useEffect(() => {
     const token = localStorage.getItem('token');
-    if (token) {
+    const storedUser = localStorage.getItem('user');
+    if (token && storedUser) {
+      const parsedUser = JSON.parse(storedUser);
+      setUser(parsedUser);
+      setIsAuthenticated(true);
+      setPermissions(parsedUser.permissions || []);
+      // opcional: pode validar token com backend aqui
+    } else if (token) {
       axios
         .get(`${API_URL}/auth/profile`, {
           headers: { Authorization: `Bearer ${token}` },
@@ -69,7 +79,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         .then(response => {
           setUser(response.data);
           setIsAuthenticated(true);
-          setPermissions(['canAccessDashboard']); // simulado
+          setPermissions(response.data.permissions || []);
+          localStorage.setItem('user', JSON.stringify(response.data));
         })
         .catch(() => {
           logout();
